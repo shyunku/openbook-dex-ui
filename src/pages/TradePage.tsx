@@ -26,11 +26,15 @@ import { notify } from '../utils/notifications';
 import { useHistory, useParams } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 
-import { TVChartContainer } from '../components/TradingView';
+// import { TVChartContainer } from '../components/TradingView';
 // Use following stub for quick setup without the TradingView private dependency
 // function TVChartContainer() {
 //   return <></>;
 // }
+
+import { fetchCandles } from '../utils/fetchCandles';
+import { useConnection } from '../utils/connection';
+import LWCandleChart, { Candle } from '../components/LWCandleChart';
 
 const { Option, OptGroup } = Select;
 
@@ -83,6 +87,26 @@ function TradePageInner() {
     width: window.innerWidth,
   });
 
+  const connection = useConnection();
+  const [candles, setCandles] = useState<Candle[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      if (!market) return;
+      const c = await fetchCandles(market, connection);
+      if (mounted) setCandles(c);
+    }
+    load();
+
+    // 주기적 갱신(예: 15초)
+    const id = setInterval(load, 15_000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [market]);
+
   useEffect(() => {
     document.title = marketName ? `${marketName} — Serum` : 'Serum';
   }, [marketName]);
@@ -113,6 +137,7 @@ function TradePageInner() {
       (size) => changeOrderRef.current && changeOrderRef.current({ size }),
       [],
     ),
+    candles,
   };
   const component = (() => {
     if (handleDeprecated) {
@@ -332,7 +357,7 @@ const DeprecatedMarketsPage = ({ switchToLiveMarkets }) => {
   );
 };
 
-const RenderNormal = ({ onChangeOrderRef, onPrice, onSize }) => {
+const RenderNormal = ({ onChangeOrderRef, onPrice, onSize, candles }) => {
   return (
     <Row
       style={{
@@ -342,7 +367,7 @@ const RenderNormal = ({ onChangeOrderRef, onPrice, onSize }) => {
     >
       <Col flex="auto" style={{ height: '50vh' }}>
         <Row style={{ height: '100%' }}>
-          <TVChartContainer />
+          <LWCandleChart candles={candles} />
         </Row>
         <Row style={{ height: '70%' }}>
           <UserInfoTable />
@@ -363,11 +388,11 @@ const RenderNormal = ({ onChangeOrderRef, onPrice, onSize }) => {
   );
 };
 
-const RenderSmall = ({ onChangeOrderRef, onPrice, onSize }) => {
+const RenderSmall = ({ onChangeOrderRef, onPrice, onSize, candles }) => {
   return (
     <>
       <Row style={{ height: '30vh' }}>
-        <TVChartContainer />
+        <LWCandleChart candles={candles} />
       </Row>
       <Row
         style={{
@@ -402,11 +427,11 @@ const RenderSmall = ({ onChangeOrderRef, onPrice, onSize }) => {
   );
 };
 
-const RenderSmaller = ({ onChangeOrderRef, onPrice, onSize }) => {
+const RenderSmaller = ({ onChangeOrderRef, onPrice, onSize, candles }) => {
   return (
     <>
       <Row style={{ height: '50vh' }}>
-        <TVChartContainer />
+        <LWCandleChart candles={candles} />
       </Row>
       <Row>
         <Col xs={24} sm={12} style={{ height: '100%', display: 'flex' }}>
