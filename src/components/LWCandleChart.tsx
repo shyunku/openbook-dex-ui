@@ -1,27 +1,31 @@
 import React, { useEffect, useRef } from 'react';
-import { createChart, ColorType } from 'lightweight-charts';
+import {
+  createChart,
+  ColorType,
+  CandlestickSeries, // ⬅️ 방법 1: 미리 정의된 상수
+  UTCTimestamp,
+  CandlestickData,
+  IChartApi,
+  ISeriesApi,
+} from 'lightweight-charts';
 
-export interface Candle {
-  time: number; // epoch seconds
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-}
+type Candle = CandlestickData<UTCTimestamp>;
 
-interface Props {
+export default function LWCandleChart({
+  candles,
+  height = 400,
+}: {
   candles: Candle[];
   height?: number;
-}
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi>();
+  const seriesRef = useRef<ISeriesApi<'Candlestick'>>();
 
-export default function LWCandleChart({ candles, height = 400 }: Props) {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const chartInstance = useRef<ReturnType<typeof createChart>>();
-
-  // create + destroy
   useEffect(() => {
-    if (!chartRef.current) return;
-    chartInstance.current = createChart(chartRef.current, {
+    if (!wrapRef.current) return;
+
+    chartRef.current = createChart(wrapRef.current, {
       height,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
@@ -31,17 +35,29 @@ export default function LWCandleChart({ candles, height = 400 }: Props) {
       timeScale: { borderColor: '#333' },
       rightPriceScale: { borderColor: '#333' },
     });
-    const series = chartInstance.current.addCandlestickSeries();
-    series.setData(candles);
 
-    return () => chartInstance.current?.remove();
-  }, []); // 최초 한 번
+    // ⬇️ ① 시리즈 생성 (두 방법 중 택1)
+    seriesRef.current = chartRef.current.addSeries(CandlestickSeries, {
+      upColor: '#26a69a',
+      downColor: '#ef5350',
+      wickUpColor: '#26a69a',
+      wickDownColor: '#ef5350',
+      borderVisible: false,
+    });
 
-  // 데이터 갱신
+    seriesRef.current.setData(candles);
+    return () => chartRef.current?.remove();
+  }, []);
+
+  // ⬇️ ② 데이터 갱신
   useEffect(() => {
-    const series = chartInstance.current?.serieses()[0]; // 첫 번째 시리즈
-    if (series) series.setData(candles);
+    seriesRef.current?.setData(candles);
   }, [candles]);
 
-  return <div ref={chartRef} style={{ width: '100%', height }} />;
+  // ⬇️ ③ 높이 prop 반영(선택)
+  useEffect(() => {
+    chartRef.current?.applyOptions({ height });
+  }, [height]);
+
+  return <div ref={wrapRef} style={{ width: '100%', height }} />;
 }
