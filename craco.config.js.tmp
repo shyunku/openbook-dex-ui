@@ -1,6 +1,4 @@
 const CracoLessPlugin = require('craco-less');
-const webpack = require('webpack');
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 // Babel 변환(transpile)이 필요한 패키지 목록
 const packagesToTranspile = [
@@ -8,7 +6,7 @@ const packagesToTranspile = [
   '@project-serum',
   // @ledgerhq는 alias로 처리하므로 여기서는 제외해도 될 수 있으나,
   // 만약을 위해 남겨두는 것이 안전합니다.
-  '@ledgerhq',
+  '@ledgerhq', 
 ];
 
 module.exports = {
@@ -17,34 +15,25 @@ module.exports = {
     alias: {
       '@ledgerhq/devices/hid-framing': '@ledgerhq/devices/lib/hid-framing',
       // 다른 @ledgerhq 패키지들도 lib를 사용하도록 강제
-      '@ledgerhq/hw-transport-webhid/lib-es':
-        '@ledgerhq/hw-transport-webhid/lib',
+      '@ledgerhq/hw-transport-webhid/lib-es': '@ledgerhq/hw-transport-webhid/lib',
       '@ledgerhq/hw-transport/lib-es': '@ledgerhq/hw-transport/lib',
       '@ledgerhq/errors/lib-es': '@ledgerhq/errors/lib',
       '@ledgerhq/devices/lib-es': '@ledgerhq/devices/lib',
     },
     configure: (webpackConfig) => {
-      // ── 1. Node core 모듈 브라우저 대응 ───────────────────────────
-      webpackConfig.resolve.fallback = {
-        fs: false, // 브라우저에서 쓸 일 없음
-        os: require.resolve('os-browserify/browser'),
-        path: require.resolve('path-browserify'),
-        crypto: require.resolve('crypto-browserify'),
-        stream: require.resolve('stream-browserify'),
-        buffer: require.resolve('buffer'),
-        process: require.resolve('process/browser'),
-      };
+      // 2. 최신 문법 오류 해결을 위한 babel-loader 설정
+      const babelLoader = webpackConfig.module.rules.find(
+        (rule) => rule.oneOf && rule.oneOf.find((r) => r.loader && r.loader.includes('babel-loader'))
+      )?.oneOf.find((r) => r.loader && r.loader.includes('babel-loader'));
 
-      // ── 2. 전역 객체(process·Buffer) 주입 ────────────────────────
-      webpackConfig.plugins.push(
-        new webpack.ProvidePlugin({
-          process: 'process/browser',
-          Buffer: ['buffer', 'Buffer'],
-        }),
-        // ── 3. 나머지 polyfill 자동 주입 ──────────────────────────
-        new NodePolyfillPlugin(),
-      );
-
+      if (babelLoader) {
+        babelLoader.exclude = (modulePath) => {
+          if (packagesToTranspile.some(pkg => modulePath.includes(pkg))) {
+            return false;
+          }
+          return /node_modules/.test(modulePath);
+        };
+      }
       return webpackConfig;
     },
   },
