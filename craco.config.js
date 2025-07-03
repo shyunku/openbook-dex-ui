@@ -45,18 +45,13 @@ module.exports = {
         new NodePolyfillPlugin(),
       );
 
-      config.module.rules = config.module.rules.map((rule) => {
+      config.module.rules.forEach((rule) => {
         if (
           rule.use &&
-          rule.use.find((u) => u.loader?.includes('source-map-loader'))
+          rule.use.some((u) => String(u.loader).includes('source-map-loader'))
         ) {
-          rule.exclude = [
-            /node_modules\/@openbook-dex/,
-            /node_modules\/@project-serum/,
-            /node_modules\/@solana/,
-          ];
+          rule.exclude = /node_modules/; // ← 모든 패키지 통째로 제외
         }
-        return rule;
       });
 
       return config;

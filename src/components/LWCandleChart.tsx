@@ -9,7 +9,7 @@ import {
   ISeriesApi,
 } from 'lightweight-charts';
 
-type Candle = CandlestickData<UTCTimestamp>;
+export type Candle = CandlestickData<UTCTimestamp>;
 
 export default function LWCandleChart({
   candles,

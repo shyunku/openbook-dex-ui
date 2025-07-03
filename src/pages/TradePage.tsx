@@ -34,7 +34,8 @@ import { nanoid } from 'nanoid';
 
 import { fetchCandles } from '../utils/fetchCandles';
 import { useConnection } from '../utils/connection';
-import LWCandleChart, { Candle } from '../components/LWCandleChart';
+import LWCandleChart from '../components/LWCandleChart';
+import type { Candle } from '../components/LWCandleChart';
 
 const { Option, OptGroup } = Select;
 
