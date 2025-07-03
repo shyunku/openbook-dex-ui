@@ -23,9 +23,9 @@ module.exports = {
       '@ledgerhq/errors/lib-es': '@ledgerhq/errors/lib',
       '@ledgerhq/devices/lib-es': '@ledgerhq/devices/lib',
     },
-    configure: (webpackConfig) => {
+    configure: (config) => {
       // ── 1. Node core 모듈 브라우저 대응 ───────────────────────────
-      webpackConfig.resolve.fallback = {
+      config.resolve.fallback = {
         fs: false, // 브라우저에서 쓸 일 없음
         os: require.resolve('os-browserify/browser'),
         path: require.resolve('path-browserify'),
@@ -36,7 +36,7 @@ module.exports = {
       };
 
       // ── 2. 전역 객체(process·Buffer) 주입 ────────────────────────
-      webpackConfig.plugins.push(
+      config.plugins.push(
         new webpack.ProvidePlugin({
           process: 'process/browser',
           Buffer: ['buffer', 'Buffer'],
@@ -45,7 +45,21 @@ module.exports = {
         new NodePolyfillPlugin(),
       );
 
-      return webpackConfig;
+      config.module.rules = config.module.rules.map((rule) => {
+        if (
+          rule.use &&
+          rule.use.find((u) => u.loader?.includes('source-map-loader'))
+        ) {
+          rule.exclude = [
+            /node_modules\/@openbook-dex/,
+            /node_modules\/@project-serum/,
+            /node_modules\/@solana/,
+          ];
+        }
+        return rule;
+      });
+
+      return config;
     },
   },
   babel: {
