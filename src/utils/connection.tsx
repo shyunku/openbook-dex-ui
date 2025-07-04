@@ -37,6 +37,7 @@ export function ConnectionProvider({ children }) {
   const availableEndpoints = ENDPOINTS.concat(customEndpoints);
 
   console.log(`WS Endpoint:`, wsEndpoint);
+  console.log(`GLOBAL WS:`, process.env.REACT_APP_SOLANA_WS_ENDPOINT);
 
   const connection = useMemo(
     () =>
