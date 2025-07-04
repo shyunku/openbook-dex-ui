@@ -11,6 +11,7 @@ export const ENDPOINTS: EndpointInfo[] = [
     endpoint:
       process.env.REACT_APP_SOLANA_RPC_ENDPOINT ||
       'https://solana-api.projectserum.com',
+    wsEndpoint: process.env.REACT_APP_SOLANA_WS_ENDPOINT || undefined,
     custom: false,
   },
   { name: 'localnet', endpoint: 'http://127.0.0.1:8899', custom: false },
@@ -26,17 +27,29 @@ export function ConnectionProvider({ children }) {
     'connectionEndpts',
     ENDPOINTS[0].endpoint,
   );
+  const [wsEndpoint, setWsEndpoint] = useLocalStorageState<string>(
+    'connectionEndpts',
+    ENDPOINTS[0].endpoint,
+  );
   const [customEndpoints, setCustomEndpoints] = useLocalStorageState<
     EndpointInfo[]
   >('customConnectionEndpoints', []);
   const availableEndpoints = ENDPOINTS.concat(customEndpoints);
 
   const connection = useMemo(
-    () => new Connection(endpoint, 'recent'),
+    () =>
+      new Connection(endpoint, {
+        commitment: 'recent',
+        wsEndpoint: wsEndpoint,
+      }),
     [endpoint],
   );
   const sendConnection = useMemo(
-    () => new Connection(endpoint, 'recent'),
+    () =>
+      new Connection(endpoint, {
+        commitment: 'recent',
+        wsEndpoint: wsEndpoint,
+      }),
     [endpoint],
   );
   const [priorityFee, setPriorityFee] = useState<number | undefined>(undefined);
@@ -156,7 +169,7 @@ export function useAccountInfo(
       const subscriptionId = connection.onAccountChange(publicKey, (info) => {
         if (
           !previousInfo ||
-          !previousInfo.data.equals(info.data) ||
+          !previousInfo.data.equals(Uint8Array.from(info.data)) ||
           previousInfo.lamports !== info.lamports
         ) {
           previousInfo = info;
@@ -181,7 +194,7 @@ export function useAccountInfo(
   if (
     !accountInfo ||
     !previousInfoRef.current ||
-    !previousInfoRef.current.data.equals(accountInfo.data) ||
+    !previousInfoRef.current.data.equals(Uint8Array.from(accountInfo.data)) ||
     previousInfoRef.current.lamports !== accountInfo.lamports
   ) {
     previousInfoRef.current = accountInfo;

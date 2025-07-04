@@ -116,7 +116,10 @@ export default function TopBar() {
     };
 
     try {
-      const connection = new Connection(info.endpoint, 'recent');
+      const connection = new Connection(info.endpoint, {
+        commitment: 'recent',
+        wsEndpoint: info.wsEndpoint,
+      });
       connection
         .getBlockTime(0)
         .then(() => {
