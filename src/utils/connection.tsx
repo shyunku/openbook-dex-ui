@@ -36,6 +36,8 @@ export function ConnectionProvider({ children }) {
   >('customConnectionEndpoints', []);
   const availableEndpoints = ENDPOINTS.concat(customEndpoints);
 
+  console.log(`WS Endpoint:`, wsEndpoint);
+
   const connection = useMemo(
     () =>
       new Connection(endpoint, {
