@@ -318,14 +318,19 @@ export function MarketProvider({ marketAddress, setMarketAddress, children }) {
 }
 
 export function getTradePageUrl(marketAddress?: string) {
-  if (!marketAddress) {
-    const saved = localStorage.getItem('marketAddress');
-    if (saved) {
-      marketAddress = JSON.parse(saved);
+  try {
+    if (!marketAddress) {
+      const saved = localStorage.getItem('marketAddress');
+      if (saved) {
+        marketAddress = JSON.parse(saved);
+      }
+      marketAddress = marketAddress || DEFAULT_MARKET?.address.toBase58() || '';
     }
-    marketAddress = marketAddress || DEFAULT_MARKET?.address.toBase58() || '';
+    return `/market/${marketAddress}`;
+  } catch (err) {
+    console.error(err);
+    return null;
   }
-  return `/market/${marketAddress}`;
 }
 
 export function useSelectedTokenAccounts(): [
