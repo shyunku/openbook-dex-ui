@@ -28,7 +28,7 @@ export function ConnectionProvider({ children }) {
     ENDPOINTS[0].endpoint,
   );
   const [wsEndpoint, setWsEndpoint] = useLocalStorageState<string>(
-    'connectionEndpts',
+    'connectionWsEndpts',
     ENDPOINTS[0].wsEndpoint,
   );
   const [customEndpoints, setCustomEndpoints] = useLocalStorageState<
