@@ -63,6 +63,7 @@ export async function runMarketUpdate() {
 
     return v;
   });
+  console.log('markets result', fetchedMarkets);
 
   const addedMarkets: MarketInfo[] = [];
   for (const market of fetchedMarkets) {
