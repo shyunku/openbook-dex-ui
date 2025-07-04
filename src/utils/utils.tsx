@@ -134,7 +134,14 @@ export function useLocalStorageState<T = any>(
     JSON.stringify(defaultState),
   );
   return [
-    useMemo(() => stringState && JSON.parse(stringState), [stringState]),
+    useMemo(() => {
+      try {
+        return stringState && JSON.parse(stringState);
+      } catch (e) {
+        console.error(e);
+        return defaultState;
+      }
+    }, [stringState, defaultState]),
     (newState) => setStringState(JSON.stringify(newState)),
   ];
 }
